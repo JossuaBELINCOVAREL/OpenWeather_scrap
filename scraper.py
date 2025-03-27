@@ -14,15 +14,13 @@ def get_books_data():
     
     books = []
 
-    # Scraping de la liste des livres
+    # Scraping des livres
     for book in soup.find_all('article', class_='product_pod'):
         title = book.find('h3').find('a')['title']
-        price = book.find('p', class_='price_color').text
         availability = book.find('p', class_='instock availability').text.strip()
         
         books.append({
             'Title': title,
-            'Price': price,
             'Availability': availability
         })
     
@@ -32,12 +30,3 @@ def save_books_to_csv(books):
     df = pd.DataFrame(books)
     df.to_csv('books.csv', index=False)
     print("Fichier CSV créé avec succès !")
-
-# Fonction principale
-def main():
-    books = get_books_data()
-    if books:
-        save_books_to_csv(books)
-
-if __name__ == "__main__":
-    main()
