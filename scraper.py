@@ -1,34 +1,43 @@
 import requests
 from bs4 import BeautifulSoup
+import pandas as pd
 
-def get_trending_movies():
-    url = 'https://www.imdb.com/chart/moviemeter/'
+def get_books_data():
+    url = "https://books.toscrape.com/"
     response = requests.get(url)
     
-    # Si la requête échoue, retourne une liste vide
     if response.status_code != 200:
-        return []
-
+        print("Erreur de requête", response.status_code)
+        return None
+    
     soup = BeautifulSoup(response.text, 'html.parser')
     
-    # Trouver la liste des films tendance avec la classe mise à jour
-    movie_list = soup.find_all('li', class_='ipc-metadata-list-summary-item')
+    books = []
 
-    movies = []
-
-    # Parcourir chaque élément de film dans la liste
-    for movie in movie_list:
-        # Extraire le titre du film
-        title = movie.find('span', class_='sc-16ede6d9-2 knbZAA')  # Assurez-vous de mettre la bonne classe ici pour le titre
-        if title:
-            title = title.get_text(strip=True)
+    # Scraping de la liste des livres
+    for book in soup.find_all('article', class_='product_pod'):
+        title = book.find('h3').find('a')['title']
+        price = book.find('p', class_='price_color').text
+        availability = book.find('p', class_='instock availability').text.strip()
         
-        # Extraire le rang ou la position (si disponible)
-        rank = movie.find('span', class_='ipc-metadata-list-item__label')  # Mettez la bonne classe ici pour le rang
-        if rank:
-            rank = rank.get_text(strip=True)
-        
-        if title and rank:
-            movies.append(f"{rank} - {title}")
+        books.append({
+            'Title': title,
+            'Price': price,
+            'Availability': availability
+        })
+    
+    return books
 
-    return movies
+def save_books_to_csv(books):
+    df = pd.DataFrame(books)
+    df.to_csv('books.csv', index=False)
+    print("Fichier CSV créé avec succès !")
+
+# Fonction principale
+def main():
+    books = get_books_data()
+    if books:
+        save_books_to_csv(books)
+
+if __name__ == "__main__":
+    main()
